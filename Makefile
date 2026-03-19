@@ -50,7 +50,7 @@ tidy:
 	$(CMAKE) --build --preset $(TIDY_PRESET) -j
 
 example: build
-	./build/discordcpp_basic_consumer $(WS_URL)
+	bash -c 'set -a; [ -f .env ] && source .env; set +a; ./build/discordcpp_basic_consumer'
 
 run-server:
 	$(PYTHON) scripts/ws_test_server.py

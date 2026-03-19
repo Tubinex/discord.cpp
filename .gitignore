@@ -28,3 +28,5 @@ compile_commands.json
 CTestTestfile.cmake
 .vscode/
 .idea/
+.env
+*.json

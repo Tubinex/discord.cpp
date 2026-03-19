@@ -2,6 +2,8 @@
 
 #include <cpr/cpr.h>
 
+#include <utility>
+
 namespace discord {
 
 namespace {
@@ -21,9 +23,28 @@ HttpResponse toHttpResponse(const cpr::Response &response) {
 
 }
 
+HttpClient::HttpClient(std::string token, ClientType type)
+    : mToken(std::move(token)), mClientType(type) {}
+
+void HttpClient::setUserAgent(std::string userAgent) { mUserAgent = std::move(userAgent); }
+
+std::map<std::string, std::string> HttpClient::authHeaders() const {
+    std::map<std::string, std::string> headers;
+    if (!mToken.empty()) {
+        headers["Authorization"] = mClientType == ClientType::Bot ? "Bot " + mToken : mToken;
+    }
+    if (!mUserAgent.empty()) {
+        headers["User-Agent"] = mUserAgent;
+    }
+    return headers;
+}
+
 HttpResponse HttpClient::get(const std::string &url,
                              const std::map<std::string, std::string> &headers) const {
     cpr::Header requestHeaders;
+    for (const auto &[key, value] : authHeaders()) {
+        requestHeaders[key] = value;
+    }
     for (const auto &[key, value] : headers) {
         requestHeaders[key] = value;
     }
@@ -33,9 +54,10 @@ HttpResponse HttpClient::get(const std::string &url,
 
 HttpResponse HttpClient::postJson(const std::string &url, const std::string &jsonBody,
                                   const std::map<std::string, std::string> &headers) const {
-    std::map<std::string, std::string> mergedHeaders = headers;
-    if (mergedHeaders.find("Content-Type") == mergedHeaders.end()) {
-        mergedHeaders["Content-Type"] = "application/json";
+    std::map<std::string, std::string> mergedHeaders = authHeaders();
+    mergedHeaders["Content-Type"] = "application/json";
+    for (const auto &[key, value] : headers) {
+        mergedHeaders[key] = value;
     }
 
     cpr::Header requestHeaders;
