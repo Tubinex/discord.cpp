@@ -1,0 +1,50 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "dev",
+            "displayName": "Development",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "DISCORDCPP_BUILD_EXAMPLES": "ON",
+                "DISCORDCPP_BUILD_TESTS": "ON",
+                "DISCORDCPP_ENABLE_WARNINGS": "ON"
+            }
+        },
+        {
+            "name": "dev-tidy",
+            "displayName": "Development + clang-tidy",
+            "inherits": "dev",
+            "cacheVariables": {
+                "DISCORDCPP_ENABLE_CLANG_TIDY": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "dev",
+            "configurePreset": "dev"
+        },
+        {
+            "name": "dev-tidy",
+            "configurePreset": "dev-tidy"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "dev",
+            "configurePreset": "dev",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}

@@ -1,0 +1,9 @@
+Checks: >-
+  -*,
+  -bugprone-*,
+  performance-*,
+  -modernize-*,
+  -readability-*,
+  -performance-avoid-endl
+HeaderFilterRegex: '^(include|src)/'
+FormatStyle: file
