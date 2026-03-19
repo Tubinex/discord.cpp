@@ -1,0 +1,9 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(nlohmann_json REQUIRED)
+find_dependency(IXWebSocket REQUIRED)
+find_dependency(cpr REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/discordcppTargets.cmake")

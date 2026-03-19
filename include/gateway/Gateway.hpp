@@ -23,8 +23,7 @@ class Gateway {
 
     static constexpr const char *kAllEvents = "*";
 
-    explicit Gateway(std::string token = {}, ClientType type = ClientType::Bot,
-                     int intents = 513);
+    explicit Gateway(std::string token = {}, ClientType type = ClientType::Bot, int intents = 513);
     ~Gateway();
 
     Gateway(const Gateway &) = delete;
@@ -45,7 +44,6 @@ class Gateway {
 
     void setUserAgent(std::string userAgent);
 
-    // Properties used in the User-mode Identify payload (no-op for Bot).
     void setClientBuildNumber(int buildNumber);
     void setOsVersion(std::string osVersion);
     void setOsArch(std::string osArch);
@@ -59,7 +57,7 @@ class Gateway {
   private:
     void handleMessage(const ix::WebSocketMessagePtr &message);
     void handleDiscordMessage(const std::string &json);
-    void handleHello(const std::string &d);
+    void handleHello(int heartbeatInterval);
     void handleDispatch(int sequence, const std::string &eventName, const std::string &d);
     void sendIdentify();
     void sendHeartbeat();

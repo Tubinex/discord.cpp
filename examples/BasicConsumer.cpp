@@ -6,8 +6,7 @@
 #include <string>
 #include <thread>
 
-#include "gateway/Gateway.hpp"
-#include "http/Client.hpp"
+#include "Client.hpp"
 
 namespace {
 std::atomic<bool> gRunning{true};
@@ -37,62 +36,46 @@ int main() {
     std::signal(SIGINT, onSignal);
     std::signal(SIGTERM, onSignal);
 
-    discord::Gateway gateway(tokenStr, clientType);
-    discord::HttpClient http(tokenStr, clientType);
+    discord::Client client(tokenStr, clientType);
 
     if (const char *ua = env("DISCORD_USER_AGENT")) {
-        gateway.setUserAgent(ua);
-        http.setUserAgent(ua);
+        client.gateway().setUserAgent(ua);
+        client.http().setUserAgent(ua);
     }
 
-    if (const char *v = env("DISCORD_OS_VERSION")) {
-        gateway.setOsVersion(v);
-    }
-    if (const char *v = env("DISCORD_OS_ARCH")) {
-        gateway.setOsArch(v);
-    }
-    if (const char *v = env("DISCORD_DISTRO")) {
-        gateway.setDistro(v);
-    }
-    if (const char *v = env("DISCORD_DISPLAY_SERVER")) {
-        gateway.setDisplayServer(v);
-    }
-    if (const char *v = env("DISCORD_WINDOW_MANAGER")) {
-        gateway.setWindowManager(v);
-    }
-    if (const char *v = env("DISCORD_BUILD_NUMBER")) {
-        try {
-            gateway.setClientBuildNumber(std::stoi(v));
-        } catch (...) {
-        }
-    }
-
-    gateway.enableMessageDump("messages.json");
-    gateway.subscribe("socket_open", [](const discord::Event &) {
-        std::cout << "Connected to Discord gateway\n";
+    client.onReady([](const discord::Ready &r) {
+        std::cout << "Logged in as " << r.user.username << " (session: " << r.sessionId << ")\n";
     });
 
-    gateway.subscribe("socket_close", [](const discord::Event &event) {
-        std::cout << "Connection closed: " << event.mPayload << '\n';
+    client.onMessageCreate([](const discord::Message &msg) {
+        std::cout << "[MSG] " << msg.author.username << ": " << msg.content << '\n';
     });
 
-    gateway.subscribe("socket_error", [](const discord::Event &event) {
-        std::cerr << "Connection error: " << event.mPayload << '\n';
+    client.onMessageDelete([](const discord::MessageDelete &msg) {
+        std::cout << "[DEL] message " << msg.id << " in channel " << msg.channelId << '\n';
     });
 
-    gateway.subscribeAll([](const discord::Event &event) {
-        std::cout << "[" << event.mName << "] " << event.mPayload << '\n';
+    client.onChannelCreate(
+        [](const discord::Channel &ch) { std::cout << "[CHANNEL+] #" << ch.name << '\n'; });
+
+    client.onGuildMemberUpdate([](const discord::Member &member) {
+        if (member.user)
+            std::cout << "[MEMBER] " << member.user->username << " updated\n";
+    });
+
+    client.gateway().subscribe("socket_error", [](const discord::Event &e) {
+        std::cerr << "Connection error: " << e.mPayload << '\n';
     });
 
     std::cout << "Connecting... (Ctrl+C to stop)\n";
-    gateway.connect();
+    client.connect();
 
     while (gRunning) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     std::cout << "\nShutting down...\n";
-    gateway.disconnect();
+    client.disconnect();
 
     return 0;
 }
